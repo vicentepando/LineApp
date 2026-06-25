@@ -24,6 +24,16 @@ const levelLabel: Record<NivelUsuario, string> = {
   avanzado: 'Avanzado',
 };
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
 export default function LoginScreen() {
   const authMessage = useAuthStore((state) => state.authMessage);
   const setAuthMessage = useAuthStore((state) => state.setAuthMessage);
@@ -139,7 +149,7 @@ export default function LoginScreen() {
       setAuthMessage(null);
       router.replace('/(tabs)');
     } catch (authError) {
-      setError(authError instanceof Error ? authError.message : 'No pudimos crear tu cuenta');
+      setError(getErrorMessage(authError));
     } finally {
       setLoading(false);
     }
@@ -177,17 +187,19 @@ export default function LoginScreen() {
   };
 
   const renderOption = ({
+    optionKey,
     selected,
     title,
     subtitle,
     onPress,
   }: {
+    optionKey?: string;
     selected: boolean;
     title: string;
     subtitle?: string;
     onPress: () => void;
   }) => (
-    <Pressable style={[styles.option, selected && styles.optionSelected]} onPress={onPress}>
+    <Pressable key={optionKey} style={[styles.option, selected && styles.optionSelected]} onPress={onPress}>
       <View style={[styles.radio, selected && styles.radioSelected]} />
       <View style={styles.optionTextBlock}>
         <Text style={[styles.optionTitle, selected && styles.optionTitleSelected]}>{title}</Text>
@@ -285,6 +297,7 @@ export default function LoginScreen() {
           <Text style={styles.title}>Tu nivel</Text>
           {levels.map((level) =>
             renderOption({
+              optionKey: level,
               selected: nivel === level,
               title: levelLabel[level],
               onPress: () => setNivel(level),
@@ -293,6 +306,7 @@ export default function LoginScreen() {
           <Text style={styles.titleSmall}>¿Hace cuánto pescás?</Text>
           {experiences.map((item) =>
             renderOption({
+              optionKey: item.value,
               selected: experiencia === item.value,
               title: item.label,
               onPress: () => setExperiencia(item.value),

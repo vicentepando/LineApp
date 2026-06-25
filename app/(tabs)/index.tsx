@@ -8,6 +8,14 @@ import { theme } from '@/constants/theme';
 import { useSpots } from '@/hooks/useSpots';
 import type { Spot } from '@/types';
 
+function normalizeSearchText(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
 export default function MapScreen() {
   const sheetRef = useRef<BottomSheet>(null);
   const { data: spots = [], isLoading, error, refetch } = useSpots();
@@ -16,10 +24,10 @@ export default function MapScreen() {
   const [toast, setToast] = useState<string | null>(null);
 
   const filteredSpots = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
+    const normalized = normalizeSearchText(query);
     if (!normalized) return spots;
     return spots.filter((spot) =>
-      `${spot.nombre} ${spot.provincia}`.toLowerCase().includes(normalized),
+      normalizeSearchText(`${spot.nombre} ${spot.provincia}`).includes(normalized),
     );
   }, [query, spots]);
 

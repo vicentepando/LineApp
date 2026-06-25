@@ -6,6 +6,7 @@ import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persi
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { theme } from '@/constants/theme';
@@ -44,8 +45,8 @@ export default function RootLayout() {
     return () => data.subscription.unsubscribe();
   }, [setLoading, setSession]);
 
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+  const app = (
+    <View style={styles.appFrame}>
       <SafeAreaProvider>
         <PersistQueryClientProvider client={queryClient} persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 * 7 }}>
           <BottomSheetModalProvider>
@@ -65,6 +66,31 @@ export default function RootLayout() {
           </BottomSheetModalProvider>
         </PersistQueryClientProvider>
       </SafeAreaProvider>
+    </View>
+  );
+
+  return (
+    <GestureHandlerRootView style={styles.root}>
+      {Platform.OS === 'web' ? <View style={styles.webShell}>{app}</View> : app}
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  webShell: {
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    flex: 1,
+    width: '100%',
+  },
+  appFrame: {
+    backgroundColor: theme.colors.background,
+    flex: 1,
+    maxWidth: Platform.OS === 'web' ? 430 : undefined,
+    overflow: 'hidden',
+    width: '100%',
+  },
+});
