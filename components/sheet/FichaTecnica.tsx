@@ -14,7 +14,7 @@ export function FichaTecnicaBlock({ spotId }: { spotId: string }) {
         <Text style={styles.title}>Ficha técnica</Text>
         <Text style={styles.loginText}>Iniciá sesión para ver la ficha técnica completa.</Text>
         <View style={styles.lockedList}>
-          <Text style={styles.lockedItem}>Mosca recomendada</Text>
+          <Text style={styles.lockedItem}>Señuelo o mosca recomendada</Text>
           <Text style={styles.lockedItem}>Línea, tippet y caña</Text>
           <Text style={styles.lockedItem}>Horario ideal y reportes completos</Text>
         </View>
@@ -29,7 +29,7 @@ export function FichaTecnicaBlock({ spotId }: { spotId: string }) {
   if (error) return <Text style={styles.empty}>No pudimos cargar la ficha técnica.</Text>;
   if (!data) return <Text style={styles.empty}>Sin ficha disponible</Text>;
 
-  const truchas = data.truchas?.length ? data.truchas.join(', ') : 'Sin dato';
+  const especies = data.truchas?.length ? data.truchas.join(', ') : 'Sin dato';
 
   return (
     <View style={styles.box}>
@@ -37,7 +37,7 @@ export function FichaTecnicaBlock({ spotId }: { spotId: string }) {
       <Text style={styles.line}>Caña: #{data.cana_weight}, {data.cana_largo}ft, {data.cana_accion}</Text>
       <Text style={styles.line}>Línea: WF{data.linea_weight} {data.linea_tipo}</Text>
       <Text style={styles.line}>Leader/Tippet: {data.leader_largo}ft + {data.tippet_grosor}</Text>
-      <Text style={styles.line}>Trucha: {truchas}</Text>
+      <Text style={styles.line}>Especies: {especies}</Text>
       <View style={styles.chips}>
         {data.moscas.slice(0, 3).map((mosca) => (
           <View key={`${mosca.nombre}-${mosca.tipo}`} style={styles.chip}>

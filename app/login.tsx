@@ -277,14 +277,14 @@ export default function LoginScreen() {
           <Text style={styles.subtitle}>Vamos a personalizar tu experiencia.</Text>
           {renderOption({
             selected: pescaChoice === 'si',
-            title: 'Sí, pesco con mosca',
+            title: 'Sí, pesco',
             subtitle: 'Ya tengo experiencia',
             onPress: () => setPescaChoice('si'),
           })}
           {renderOption({
             selected: pescaChoice === 'aprender',
             title: 'Quiero aprender',
-            subtitle: 'Soy nuevo en la pesca con mosca',
+            subtitle: 'Soy nuevo en la pesca',
             onPress: () => setPescaChoice('aprender'),
           })}
           {error ? <Text style={styles.error}>{error}</Text> : null}

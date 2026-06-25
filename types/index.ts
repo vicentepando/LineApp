@@ -34,7 +34,7 @@ export interface FichaTecnica {
   leader_largo: number;
   tippet_grosor: string;
   moscas: Array<{ nombre: string; tipo: TipoMosca }>;
-  truchas: TipoTrucha[];
+  truchas: string[];
   created_at?: string;
 }
 
