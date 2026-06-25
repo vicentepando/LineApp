@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '@/constants/theme';
 import { hasSupabaseConfig, supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
@@ -35,6 +36,7 @@ function getErrorMessage(error: unknown) {
 }
 
 export default function LoginScreen() {
+  const insets = useSafeAreaInsets();
   const authMessage = useAuthStore((state) => state.authMessage);
   const setAuthMessage = useAuthStore((state) => state.setAuthMessage);
   const enterGuest = useAuthStore((state) => state.enterGuest);
@@ -271,7 +273,7 @@ export default function LoginScreen() {
       </View>
       {onboardingStep === 1 ? (
         <>
-          <Text style={styles.title}>¿Pescás con mosca?</Text>
+          <Text style={styles.title}>¿Pescás?</Text>
           <Text style={styles.subtitle}>Vamos a personalizar tu experiencia.</Text>
           {renderOption({
             selected: pescaChoice === 'si',
@@ -360,7 +362,16 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingBottom: Math.max(insets.bottom + theme.spacing.lg, theme.spacing.xl),
+            paddingTop: Math.max(insets.top + theme.spacing.lg, theme.spacing.xl),
+          },
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.card}>
           {mode === 'entry' ? renderEntry() : null}
           {mode === 'login' ? renderLogin() : null}
@@ -379,7 +390,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: theme.spacing.lg,
+    paddingHorizontal: 28,
   },
   card: {
     backgroundColor: theme.colors.background,

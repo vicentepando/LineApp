@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SpotReportModal from '@/components/sheet/SpotReportModal';
 import { theme } from '@/constants/theme';
 import { useMisReportesValidados } from '@/hooks/useReportes';
@@ -9,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function PerfilScreen() {
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
   const clearGuest = useAuthStore((state) => state.clearGuest);
   const { data: usuario, isLoading } = useUsuario(user?.id);
@@ -33,7 +35,15 @@ export default function PerfilScreen() {
 
   if (!user) {
     return (
-      <View style={styles.center}>
+      <View
+        style={[
+          styles.center,
+          {
+            paddingBottom: Math.max(insets.bottom + theme.spacing.lg, theme.spacing.xl),
+            paddingTop: Math.max(insets.top + theme.spacing.lg, theme.spacing.xl),
+          },
+        ]}
+      >
         <Text style={styles.title}>Perfil</Text>
         <Text style={styles.text}>Estás explorando sin cuenta. Creá una cuenta para ver fichas técnicas completas, sumar puntos y subir reportes.</Text>
         <Pressable style={styles.button} onPress={() => router.push('/login')}>
@@ -52,7 +62,15 @@ export default function PerfilScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingBottom: Math.max(insets.bottom + theme.spacing.lg, theme.spacing.xl),
+          paddingTop: Math.max(insets.top + theme.spacing.xl, 64),
+        },
+      ]}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>{usuario?.nombre || user.email}</Text>
         <Pressable onPress={logout}>
@@ -85,7 +103,7 @@ export default function PerfilScreen() {
         )}
       />
 
-      {toast ? <Text style={styles.toast}>{toast}</Text> : null}
+      {toast ? <Text style={[styles.toast, { bottom: Math.max(insets.bottom + theme.spacing.lg, 32) }]}>{toast}</Text> : null}
 
       {spotModalVisible ? (
         <SpotReportModal
@@ -102,8 +120,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.background,
     flex: 1,
-    padding: theme.spacing.lg,
-    paddingTop: 64,
+    paddingHorizontal: 28,
   },
   center: {
     alignItems: 'center',
@@ -111,7 +128,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: theme.spacing.md,
     justifyContent: 'center',
-    padding: theme.spacing.lg,
+    paddingHorizontal: 28,
   },
   header: {
     alignItems: 'center',
@@ -201,10 +218,10 @@ const styles = StyleSheet.create({
     bottom: 32,
     color: theme.colors.background,
     fontWeight: '800',
-    left: theme.spacing.md,
+    left: theme.spacing.lg,
     padding: theme.spacing.md,
     position: 'absolute',
-    right: theme.spacing.md,
+    right: theme.spacing.lg,
     textAlign: 'center',
   },
 });

@@ -1,6 +1,7 @@
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MapSearch } from '@/components/map/MapSearch';
 import { SpotMap } from '@/components/map/SpotMap';
 import { SpotSheet } from '@/components/sheet/SpotSheet';
@@ -17,6 +18,7 @@ function normalizeSearchText(value: string) {
 }
 
 export default function MapScreen() {
+  const insets = useSafeAreaInsets();
   const sheetRef = useRef<BottomSheet>(null);
   const { data: spots = [], isLoading, error, refetch } = useSpots();
   const [query, setQuery] = useState('');
@@ -50,14 +52,14 @@ export default function MapScreen() {
       <MapSearch value={query} onChangeText={setQuery} />
 
       {isLoading ? (
-        <View style={styles.state}>
+        <View style={[styles.state, { top: Math.max(insets.top + 92, 124) }]}>
           <ActivityIndicator color={theme.colors.primary} />
           <Text style={styles.stateText}>Cargando spots...</Text>
         </View>
       ) : null}
 
       {error ? (
-        <View style={styles.errorBox}>
+        <View style={[styles.errorBox, { top: Math.max(insets.top + 92, 124) }]}>
           <Text style={styles.errorText}>{error instanceof Error ? error.message : 'No pudimos cargar spots'}</Text>
           <Pressable onPress={() => refetch()} style={styles.retry}>
             <Text style={styles.retryText}>Reintentar</Text>
@@ -65,7 +67,7 @@ export default function MapScreen() {
         </View>
       ) : null}
 
-      {toast ? <Text style={styles.toast}>{toast}</Text> : null}
+      {toast ? <Text style={[styles.toast, { bottom: Math.max(insets.bottom + 80, 96) }]}>{toast}</Text> : null}
 
       <SpotSheet ref={sheetRef} spot={selectedSpot} onToast={showToast} />
     </View>
@@ -81,11 +83,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     borderRadius: theme.borderRadius.md,
     gap: theme.spacing.sm,
-    left: theme.spacing.md,
+    left: theme.spacing.lg,
     padding: theme.spacing.md,
     position: 'absolute',
-    right: theme.spacing.md,
-    top: 124,
+    right: theme.spacing.lg,
   },
   stateText: {
     color: theme.colors.textSecondary,
@@ -93,11 +94,10 @@ const styles = StyleSheet.create({
   errorBox: {
     backgroundColor: theme.colors.background,
     borderRadius: theme.borderRadius.md,
-    left: theme.spacing.md,
+    left: theme.spacing.lg,
     padding: theme.spacing.md,
     position: 'absolute',
-    right: theme.spacing.md,
-    top: 124,
+    right: theme.spacing.lg,
   },
   errorText: {
     color: theme.colors.danger,
@@ -120,10 +120,10 @@ const styles = StyleSheet.create({
     bottom: 96,
     color: theme.colors.background,
     fontWeight: '800',
-    left: theme.spacing.md,
+    left: theme.spacing.lg,
     padding: theme.spacing.md,
     position: 'absolute',
-    right: theme.spacing.md,
+    right: theme.spacing.lg,
     textAlign: 'center',
   },
 });

@@ -2,6 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { theme } from '@/constants/theme';
 import { saveLocalReporte, type LocalReporte } from '@/lib/localReportes';
@@ -40,6 +41,7 @@ export function ReportModal({
   onClose: () => void;
   onSuccess: (message: string) => void;
 }) {
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
   const [date, setDate] = useState(new Date());
@@ -157,7 +159,15 @@ export function ReportModal({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <View style={styles.modal}>
+        <View
+          style={[
+            styles.modal,
+            {
+              marginBottom: Math.max(insets.bottom + theme.spacing.sm, theme.spacing.sm),
+              marginTop: Math.max(insets.top + theme.spacing.lg, theme.spacing.lg),
+            },
+          ]}
+        >
           <View style={styles.header}>
             <Text style={styles.title}>Subir reporte</Text>
             <Pressable onPress={onClose}>
@@ -165,7 +175,13 @@ export function ReportModal({
             </Pressable>
           </View>
 
-          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: Math.max(insets.bottom + theme.spacing.md, theme.spacing.lg) },
+            ]}
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={styles.row}>
               <Pressable style={styles.dateButton} onPress={() => setShowPicker('date')}>
                 <Text style={styles.dateText}>{formatDate(date)}</Text>
@@ -298,6 +314,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: theme.borderRadius.lg,
     gap: theme.spacing.md,
     maxHeight: '88%',
+    marginHorizontal: theme.spacing.sm,
     padding: theme.spacing.lg,
   },
   content: {

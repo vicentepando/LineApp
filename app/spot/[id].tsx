@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Badge } from '@/components/ui/Badge';
 import { FichaTecnicaBlock } from '@/components/sheet/FichaTecnica';
 import { ReportesList } from '@/components/sheet/ReportesList';
@@ -8,6 +9,7 @@ import { theme } from '@/constants/theme';
 import { useSpots } from '@/hooks/useSpots';
 
 export default function SpotDetailScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: spots = [], isLoading } = useSpots();
   const spot = spots.find((item) => item.id === id);
@@ -29,7 +31,15 @@ export default function SpotDetailScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView
+      contentContainerStyle={[
+        styles.content,
+        {
+          paddingBottom: Math.max(insets.bottom + theme.spacing.lg, theme.spacing.xl),
+          paddingTop: Math.max(insets.top + theme.spacing.lg, theme.spacing.xl),
+        },
+      ]}
+    >
       <Text style={styles.title}>{spot.nombre}</Text>
       <Text style={styles.text}>{spot.provincia} · {spot.tipo}</Text>
       <Badge value={spot.accesibilidad} />
@@ -43,7 +53,7 @@ export default function SpotDetailScreen() {
 const styles = StyleSheet.create({
   content: {
     gap: theme.spacing.md,
-    padding: theme.spacing.lg,
+    paddingHorizontal: 28,
   },
   center: {
     alignItems: 'center',

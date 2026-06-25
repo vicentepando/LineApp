@@ -1,9 +1,12 @@
 import { StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '@/constants/theme';
 
 export function MapSearch({ value, onChangeText }: { value: string; onChangeText: (value: string) => void }) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { top: Math.max(insets.top + theme.spacing.lg, 56) }]}>
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -19,10 +22,9 @@ export function MapSearch({ value, onChangeText }: { value: string; onChangeText
 
 const styles = StyleSheet.create({
   container: {
-    left: theme.spacing.md,
+    left: theme.spacing.lg,
     position: 'absolute',
-    right: theme.spacing.md,
-    top: 56,
+    right: theme.spacing.lg,
     zIndex: 10,
   },
   input: {

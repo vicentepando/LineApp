@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { theme } from '@/constants/theme';
 import { SPOTS_QUERY_KEY } from '@/hooks/useSpots';
@@ -28,6 +29,7 @@ export default function SpotReportModal({
   onClose: () => void;
   onSuccess: (message: string) => void;
 }) {
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
@@ -184,7 +186,15 @@ export default function SpotReportModal({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
       <View style={styles.backdrop}>
-        <View style={styles.modal}>
+        <View
+          style={[
+            styles.modal,
+            {
+              marginBottom: Math.max(insets.bottom + theme.spacing.sm, theme.spacing.sm),
+              marginTop: Math.max(insets.top + theme.spacing.lg, theme.spacing.lg),
+            },
+          ]}
+        >
           <View style={styles.header}>
             <Text style={styles.title}>Cargar spot/reporte</Text>
             <Pressable onPress={close}>
@@ -192,7 +202,13 @@ export default function SpotReportModal({
             </Pressable>
           </View>
 
-          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            contentContainerStyle={[
+              styles.content,
+              { paddingBottom: Math.max(insets.bottom + theme.spacing.md, theme.spacing.lg) },
+            ]}
+            keyboardShouldPersistTaps="handled"
+          >
             <TextInput
               value={name}
               onChangeText={setName}
@@ -285,6 +301,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     borderTopLeftRadius: theme.borderRadius.lg,
     borderTopRightRadius: theme.borderRadius.lg,
+    marginHorizontal: theme.spacing.sm,
     maxHeight: '88%',
     padding: theme.spacing.lg,
   },

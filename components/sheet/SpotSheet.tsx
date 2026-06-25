@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { forwardRef, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Easing } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '@/constants/theme';
 import { useReportes } from '@/hooks/useReportes';
 import { useAuthStore } from '@/stores/authStore';
@@ -17,6 +18,7 @@ import { ReportModal } from '@/components/sheet/ReportModal';
 
 export const SpotSheet = forwardRef<BottomSheet, { spot: Spot | null; onToast: (message: string) => void }>(
   ({ spot, onToast }, ref) => {
+    const insets = useSafeAreaInsets();
     const user = useAuthStore((state) => state.user);
     const setAuthMessage = useAuthStore((state) => state.setAuthMessage);
     const [reportModalVisible, setReportModalVisible] = useState(false);
@@ -57,7 +59,12 @@ export const SpotSheet = forwardRef<BottomSheet, { spot: Spot | null; onToast: (
           handleIndicatorStyle={styles.handle}
         >
           {spot ? (
-            <BottomSheetScrollView contentContainerStyle={styles.content}>
+            <BottomSheetScrollView
+              contentContainerStyle={[
+                styles.content,
+                { paddingBottom: Math.max(insets.bottom + theme.spacing.xl, theme.spacing.xl) },
+              ]}
+            >
               <View style={styles.header}>
                 <View style={styles.titleBlock}>
                   <Text style={styles.title}>{spot.nombre}</Text>
@@ -80,7 +87,7 @@ export const SpotSheet = forwardRef<BottomSheet, { spot: Spot | null; onToast: (
               </Pressable>
             </BottomSheetScrollView>
           ) : (
-            <View style={styles.content}>
+            <View style={[styles.content, { paddingBottom: Math.max(insets.bottom + theme.spacing.xl, theme.spacing.xl) }]}>
               <Text style={styles.province}>Elegí un spot para ver la ficha.</Text>
             </View>
           )}
@@ -113,7 +120,8 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: theme.spacing.md,
-    padding: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.xl,
   },
   header: {
