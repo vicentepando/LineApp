@@ -84,7 +84,7 @@ export default function PerfilScreen() {
       </View>
 
       <Pressable style={styles.spotButton} onPress={openSpotModal}>
-        <Text style={styles.spotButtonText}>Cargar spot/reporte</Text>
+        <Text style={styles.spotButtonText}>Cargar reporte</Text>
       </Pressable>
 
       <Text style={styles.sectionTitle}>Historial de reportes</Text>

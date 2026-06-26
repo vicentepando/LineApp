@@ -1,20 +1,27 @@
 import * as ImagePicker from 'expo-image-picker';
-import * as Location from 'expo-location';
 import { useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQueryClient } from '@tanstack/react-query';
 import { theme } from '@/constants/theme';
-import { SPOTS_QUERY_KEY } from '@/hooks/useSpots';
-import { hasSupabaseConfig, supabase } from '@/lib/supabase';
+import { saveLocalReporte, type LocalReporte } from '@/lib/localReportes';
 import { useAuthStore } from '@/stores/authStore';
-import type { Spot, TipoLinea } from '@/types';
+import type { TipoLinea } from '@/types';
 
 const lineTypes: TipoLinea[] = ['flote', 'hundimiento', 'sink-tip'];
+const formatDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+const formatTime = (date: Date) => date.toTimeString().slice(0, 8);
 
-const makeSpotName = (name: string, description: string) => {
+const makeSpotName = (name: string, locationText: string, description: string) => {
   const cleanName = name.trim();
   if (cleanName) return cleanName;
+  const cleanLocation = locationText.trim();
+  if (cleanLocation) return cleanLocation.slice(0, 42);
   const firstLine = description.trim().split('\n')[0]?.trim();
   if (firstLine) return firstLine.slice(0, 42);
   return `Spot reportado ${new Date().toLocaleDateString('es-AR')}`;
@@ -38,9 +45,8 @@ export default function SpotReportModal({
   const [fly, setFly] = useState('');
   const [lineWeight, setLineWeight] = useState('5');
   const [lineType, setLineType] = useState<TipoLinea>('flote');
-  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [locationText, setLocationText] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
-  const [locating, setLocating] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,34 +57,13 @@ export default function SpotReportModal({
     setFly('');
     setLineWeight('5');
     setLineType('flote');
-    setLocation(null);
+    setLocationText('');
     setPhotoUri(null);
     setError(null);
   };
 
   const close = () => {
     if (!sending) onClose();
-  };
-
-  const captureLocation = async () => {
-    setLocating(true);
-    setError(null);
-    try {
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (!permission.granted) {
-        setError('Necesitamos permiso de ubicación para cargar el spot.');
-        return;
-      }
-      const current = await Location.getCurrentPositionAsync({});
-      setLocation({
-        lat: current.coords.latitude,
-        lon: current.coords.longitude,
-      });
-    } catch (locationError) {
-      setError(locationError instanceof Error ? locationError.message : 'No pudimos obtener la ubicación.');
-    } finally {
-      setLocating(false);
-    }
   };
 
   const pickPhoto = async () => {
@@ -95,30 +80,13 @@ export default function SpotReportModal({
     if (!result.canceled) setPhotoUri(result.assets[0]?.uri ?? null);
   };
 
-  const uploadPhoto = async () => {
-    if (!photoUri || !user) return null;
-    const response = await fetch(photoUri);
-    const arrayBuffer = await response.arrayBuffer();
-    const path = `${user.id}/spot-${Date.now()}.jpg`;
-    const { error: uploadError } = await supabase.storage
-      .from('reportes-fotos')
-      .upload(path, arrayBuffer, { contentType: 'image/jpeg', upsert: false });
-    if (uploadError) throw uploadError;
-    const { data } = supabase.storage.from('reportes-fotos').getPublicUrl(path);
-    return data.publicUrl;
-  };
-
   const submit = async () => {
     if (!user) {
-      setError('Iniciá sesión para cargar spots y sumar puntos.');
+      setError('Iniciá sesión para cargar reportes.');
       return;
     }
-    if (!hasSupabaseConfig) {
-      setError('Faltan las variables de Supabase en .env');
-      return;
-    }
-    if (!location) {
-      setError('Cargá la ubicación del spot.');
+    if (!locationText.trim()) {
+      setError('Agregá una ubicación.');
       return;
     }
     if (!description.trim() || !fly.trim()) {
@@ -134,50 +102,42 @@ export default function SpotReportModal({
     setSending(true);
     setError(null);
     try {
-      const fotoUrl = await uploadPhoto();
-      const points = fotoUrl ? 400 : 200;
-      const spotName = makeSpotName(name, description);
+      const now = new Date();
+      const spotName = makeSpotName(name, locationText, description);
       const spotProvince = zone.trim() || 'Reportado';
-      const { data: spotId, error: rpcError } = await supabase.rpc('submit_spot_report', {
-        p_nombre: spotName,
-        p_provincia: spotProvince,
-        p_lat: location.lat,
-        p_lon: location.lon,
-        p_descripcion: description.trim(),
-        p_mosca: fly.trim(),
-        p_linea_weight: parsedLineWeight,
-        p_linea_tipo: lineType,
-        p_foto_url: fotoUrl,
-      });
-      if (rpcError) throw rpcError;
-
-      if (spotId) {
-        const newSpot: Spot = {
-          id: spotId,
+      const reportPayload: LocalReporte = {
+        id: `local-spot-${Date.now()}`,
+        spot_id: `local-spot-${Date.now()}`,
+        user_id: user.id,
+        fecha: formatDate(now),
+        hora: formatTime(now),
+        condiciones_texto: description.trim(),
+        hubo_pique: true,
+        mosca_funciono: fly.trim(),
+        linea: `#${parsedLineWeight} ${lineType}`,
+        tippet: null,
+        cania: null,
+        trucha: null,
+        ubicacion: locationText.trim(),
+        puntaje_estrellas: null,
+        foto_url: photoUri,
+        validado: false,
+        puntos_asignados: 0,
+        created_at: now.toISOString(),
+        local: true,
+        spots: {
           nombre: spotName,
           provincia: spotProvince,
-          tipo: 'río',
-          lat: location.lat,
-          lon: location.lon,
-          accesibilidad: 'público',
-          especies: [],
-          created_at: new Date().toISOString(),
-        };
-        queryClient.setQueryData<Spot[]>(SPOTS_QUERY_KEY, (currentSpots = []) => {
-          if (currentSpots.some((spot) => spot.id === newSpot.id)) return currentSpots;
-          return [...currentSpots, newSpot].sort((a, b) => a.nombre.localeCompare(b.nombre));
-        });
-      }
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: SPOTS_QUERY_KEY }),
-        queryClient.invalidateQueries({ queryKey: ['usuario', user.id] }),
-        queryClient.invalidateQueries({ queryKey: ['mis-reportes-validados', user.id] }),
-      ]);
+        },
+      };
+      await saveLocalReporte(reportPayload);
+      queryClient.setQueryData<LocalReporte[]>(['mis-reportes-validados', user.id], (current = []) => [reportPayload, ...current]);
+      await queryClient.invalidateQueries({ queryKey: ['mis-reportes-validados', user.id] });
       reset();
       onClose();
-      onSuccess(`Spot cargado. +${points} puntos`);
+      onSuccess('Reporte cargado');
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'No pudimos cargar el spot.');
+      setError(submitError instanceof Error ? submitError.message : 'No pudimos guardar el reporte.');
     } finally {
       setSending(false);
     }
@@ -196,7 +156,7 @@ export default function SpotReportModal({
           ]}
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Cargar spot/reporte</Text>
+            <Text style={styles.title}>Cargar reporte</Text>
             <Pressable onPress={close}>
               <Text style={styles.close}>Cerrar</Text>
             </Pressable>
@@ -224,15 +184,13 @@ export default function SpotReportModal({
               style={styles.input}
             />
 
-            <Pressable style={styles.secondaryButton} onPress={captureLocation} disabled={locating}>
-              {locating ? (
-                <ActivityIndicator color={theme.colors.primary} />
-              ) : (
-                <Text style={styles.secondaryButtonText}>
-                  {location ? `Ubicación cargada (${location.lat.toFixed(4)}, ${location.lon.toFixed(4)})` : 'Usar mi ubicación'}
-                </Text>
-              )}
-            </Pressable>
+            <TextInput
+              value={locationText}
+              onChangeText={setLocationText}
+              placeholder="Ubicación"
+              placeholderTextColor={theme.colors.textSecondary}
+              style={styles.input}
+            />
 
             <TextInput
               value={description}
@@ -275,14 +233,13 @@ export default function SpotReportModal({
             </View>
 
             <Pressable style={styles.secondaryButton} onPress={pickPhoto}>
-              <Text style={styles.secondaryButtonText}>{photoUri ? 'Foto seleccionada (+400 puntos)' : 'Agregar foto (+400 puntos)'}</Text>
+              <Text style={styles.secondaryButtonText}>{photoUri ? 'Foto seleccionada' : 'Agregar foto'}</Text>
             </Pressable>
 
-            <Text style={styles.pointsHint}>Sin foto suma 200 puntos. Con foto suma 400 puntos.</Text>
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
             <Pressable style={styles.primaryButton} onPress={submit} disabled={sending}>
-              {sending ? <ActivityIndicator color={theme.colors.background} /> : <Text style={styles.primaryButtonText}>Cargar spot</Text>}
+              {sending ? <ActivityIndicator color={theme.colors.background} /> : <Text style={styles.primaryButtonText}>Cargar reporte</Text>}
             </Pressable>
           </ScrollView>
         </View>
@@ -385,11 +342,6 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: theme.colors.primary,
     fontWeight: '800',
-  },
-  pointsHint: {
-    color: theme.colors.textSecondary,
-    fontSize: 13,
-    textAlign: 'center',
   },
   error: {
     color: theme.colors.danger,
