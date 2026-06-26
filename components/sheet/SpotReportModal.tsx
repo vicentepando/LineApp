@@ -103,11 +103,13 @@ export default function SpotReportModal({
     setError(null);
     try {
       const now = new Date();
+      const reportId = `local-spot-${Date.now()}`;
+      const points = photoUri ? 400 : 200;
       const spotName = makeSpotName(name, locationText, description);
       const spotProvince = zone.trim() || 'Reportado';
       const reportPayload: LocalReporte = {
-        id: `local-spot-${Date.now()}`,
-        spot_id: `local-spot-${Date.now()}`,
+        id: reportId,
+        spot_id: reportId,
         user_id: user.id,
         fecha: formatDate(now),
         hora: formatTime(now),
@@ -122,7 +124,7 @@ export default function SpotReportModal({
         puntaje_estrellas: null,
         foto_url: photoUri,
         validado: false,
-        puntos_asignados: 0,
+        puntos_asignados: points,
         created_at: now.toISOString(),
         local: true,
         spots: {
@@ -132,10 +134,22 @@ export default function SpotReportModal({
       };
       await saveLocalReporte(reportPayload);
       queryClient.setQueryData<LocalReporte[]>(['mis-reportes-validados', user.id], (current = []) => [reportPayload, ...current]);
-      await queryClient.invalidateQueries({ queryKey: ['mis-reportes-validados', user.id] });
+      queryClient.setQueryData(['usuario', user.id], (current: unknown) => {
+        if (!current || typeof current !== 'object') return current;
+        const usuario = current as { puntos_totales?: number; aportes_validados?: number };
+        return {
+          ...usuario,
+          puntos_totales: (usuario.puntos_totales ?? 0) + points,
+          aportes_validados: (usuario.aportes_validados ?? 0) + 1,
+        };
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['mis-reportes-validados', user.id] }),
+        queryClient.invalidateQueries({ queryKey: ['usuario', user.id] }),
+      ]);
       reset();
       onClose();
-      onSuccess('Reporte cargado');
+      onSuccess(`Reporte cargado. +${points} puntos`);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'No pudimos guardar el reporte.');
     } finally {
@@ -236,6 +250,7 @@ export default function SpotReportModal({
               <Text style={styles.secondaryButtonText}>{photoUri ? 'Foto seleccionada' : 'Agregar foto'}</Text>
             </Pressable>
 
+            <Text style={styles.pointsHint}>Sin foto suma 200 puntos. Con foto suma 400 puntos.</Text>
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
             <Pressable style={styles.primaryButton} onPress={submit} disabled={sending}>
@@ -342,6 +357,11 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: theme.colors.primary,
     fontWeight: '800',
+  },
+  pointsHint: {
+    color: theme.colors.textSecondary,
+    fontSize: 13,
+    textAlign: 'center',
   },
   error: {
     color: theme.colors.danger,
