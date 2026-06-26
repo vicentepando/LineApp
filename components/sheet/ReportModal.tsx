@@ -100,7 +100,7 @@ export function ReportModal({
         return;
       }
       if (!mosca.trim() || !linea.trim() || !tippet.trim() || !cania.trim() || !trucha.trim() || !ubicacion.trim() || !condiciones.trim()) {
-        setError('Completá mosca, línea, tippet, caña, trucha, ubicación y descripción.');
+        setError('Completá señuelo, línea, tippet, caña, trucha, ubicación y descripción.');
         return;
       }
       const reportDate = clampToNow(date);
@@ -249,7 +249,7 @@ export function ReportModal({
             <TextInput
               value={mosca}
               onChangeText={setMosca}
-              placeholder="Mosca usada"
+              placeholder="Señuelo usado"
               placeholderTextColor={theme.colors.textSecondary}
               style={styles.input}
             />

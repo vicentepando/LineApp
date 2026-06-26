@@ -5,10 +5,10 @@ import { SpotPin } from '@/components/map/SpotPin';
 import type { Spot } from '@/types';
 
 const DEFAULT_REGION = {
-  latitude: -40.0,
-  longitude: -71.0,
-  latitudeDelta: 8,
-  longitudeDelta: 8,
+  latitude: -34.6,
+  longitude: -58.45,
+  latitudeDelta: 1.2,
+  longitudeDelta: 1.2,
 };
 
 const SINGLE_SPOT_DELTA = 0.08;

@@ -98,7 +98,7 @@ export default function PerfilScreen() {
             <Text style={styles.reportTitle}>{item.spots?.nombre ?? 'Spot'} · {item.fecha}</Text>
             {item.local ? <Text style={styles.pending}>Reporte enviado</Text> : null}
             <Text style={styles.text}>{item.condiciones_texto || 'Sin comentario'}</Text>
-            {item.mosca_funciono ? <Text style={styles.text}>Mosca: {item.mosca_funciono}</Text> : null}
+            {item.mosca_funciono ? <Text style={styles.text}>Señuelo: {item.mosca_funciono}</Text> : null}
           </View>
         )}
       />

@@ -4,8 +4,8 @@ import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
 import { theme } from '@/constants/theme';
 import type { Spot } from '@/types';
 
-const DEFAULT_CENTER = { lat: -40, lng: -71 };
-const DEFAULT_ZOOM = 5;
+const DEFAULT_CENTER = { lat: -34.6, lng: -58.45 };
+const DEFAULT_ZOOM = 9;
 const GOOGLE_MAPS_WEB_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_WEB_API_KEY ?? '';
 
 const mapContainerStyle = {

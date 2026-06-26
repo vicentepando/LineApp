@@ -122,7 +122,7 @@ export default function SpotReportModal({
       return;
     }
     if (!description.trim() || !fly.trim()) {
-      setError('Completá descripción y mosca usada.');
+      setError('Completá descripción y señuelo usado.');
       return;
     }
     const parsedLineWeight = Number.parseInt(lineWeight, 10);
@@ -247,7 +247,7 @@ export default function SpotReportModal({
             <TextInput
               value={fly}
               onChangeText={setFly}
-              placeholder="¿Qué mosca se usó?"
+              placeholder="¿Qué señuelo se usó?"
               placeholderTextColor={theme.colors.textSecondary}
               style={styles.input}
             />
